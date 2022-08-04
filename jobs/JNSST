@@ -1,0 +1,62 @@
+#!/bin/ksh
+
+set -x
+
+env
+date
+export PS4='$SECONDS + '
+
+#################################################
+# get work directory
+################################################
+export DATA=${DATA:-${DATAROOT:?}/${jobid:?}}   # temporary running directory
+mkdir -p $DATA
+cd $DATA
+
+####################################
+# Specify NET and RUN Name and model
+####################################
+export NET=nsst
+export RUN=nsst
+
+export cycle=t${cyc}z
+#########################################
+# Run setpdy and initialize PDY variables
+#########################################
+setpdy.sh
+. ./PDY
+
+export CDATE=${CDATE:-${PDY}${cyc}}
+
+echo 'CDATE : ' $CDATE
+
+###################################################
+# Set directories where this job's input and output is located
+# using the COMIN and COMOUT variables
+###################################################
+export COMINgdas=${COMINgdas:-$(compath.py gfs/${gfs_ver}/gdas.${PDY})}
+
+export COMOUT=${COMOUT:-$(compath.py -o ${NET}/${nsst_ver})/${RUN}.${PDY}}
+export COMOUTwmo=${COMOUTwmo:-${COMOUT}/wmo}
+export COMOUTgempak=${COMOUTgempak:-${COMOUT}/gempak}
+mkdir -p $COMOUT $COMOUTwmo $COMOUTgempak
+
+#################################################
+# Specify job's execution areas (directory paths)
+#################################################
+export EXECnsst=${EXECnsst:-$HOMEnsst/exec}
+export FIXnsst=${FIXnsst:-$HOMEnsst/fix}
+export PARMnsst=${PARMnsst:-$HOMEnsst/parm}
+
+# Execute the script
+$HOMEnsst/scripts/exnsst.sh
+export err=$?;err_chk
+
+msg='ENDED NORMALLY.'
+postmsg "$msg"
+
+if [[ "$KEEPDATA" != YES ]] ; then
+  cd $DATAROOT
+  rm -rf $DATA
+fi
+

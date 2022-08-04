@@ -1,0 +1,114 @@
+
+Utility to generate RTG-like and OISST-like SST files with NSST SST analysis
+
+Xu Li
+
+Background
+
+The daily global NCEP RTG SST analysis will not be transferred to Dell computer system (WCOSS Phase-3) and will be discontinued. Although this doesn’t affect the operational NCEP GFS since the SST required is produced by the NSST within the NCEP GFS, some downstream users still use the RTG SST analysis. 
+This utility is to generate a RTG-like SST files with the operational NSST SST analysis.
+The OISST-like SST file is generated with this utility as well due to the same reason.
+
+Build
+
+git clone https://github.com/NOAA-EMC/SSTPUB yourpath
+cd yourpath
+git checkout nsst.v1.2
+cd fix
+gunzip *.gz
+
+Method
+
+All the grids are provided a temperature value as follows:
+
+1.Water grids
+   The value can be one of the three situations:
+   (1) Interpolated with nearby 4-grid foundation temperature (Tf) analysis of the NSST analysis, at T1534 Gaussian grids (about 1/10 lat/lon degree) and has valid value for open water grids only.
+   (2) Searched NSST Tf analysis with 500 km search radius when none of the nearby 4-grid is water
+   (3) RTG SST climatology valid at the analysis time if no water grid can be searched in 500 km range
+2. The grids with sea ice concentration greater than 15%
+   A frozen point temperature is calculated with a salinity dependent formula. The monthly salinity climatology is used in this calculation.
+3. Land grids
+   Filled by solving a Lapalacian equation with the water boundaries. 
+
+Input
+
+1. FV3GFS surface analysis file at 12 Z at T1534 Gausian grids (in nemsio binary format currently, and will be in netcdf format since gfsv16)
+2. Sea ice concentration analysis (blended) file at 12 Z 
+3. RTG monthly SST climatology at 1/12 lat/lon grids
+4. Monthly salinity climatology at T1534 Gaussian grids, interpolated from 1 degree Levitus surface salinity climatology.
+5. Surface mask fix file for ½, ¼ and 1/12 lat/lon grids
+
+Output
+
+RTG-like SST files
+
+A. GRIB1 data files:
+
+1. rtgsstgrb0.083 
+   (Daily RTG 1/12 degree SST analysis)
+2. rtgsstgrb0.083_awips 
+   (Daily RTG 1/12 degree SST analysis with bitmap)
+3. rtgsstgrb0.5 
+   (Daily RTG 1/2 degree SST analysis)
+4. rtgsstgrb0.5_awips
+   (Daily RTG 1/2 degree SST analysis with bitmap)
+
+B. GRIB2 data files:
+
+1. rtgssthr_grb_0.083.grib2
+  (Daily RTG 1/12 degree SST analysis, JPEG2000 encoding)
+2. rtgsst_grb_0.083_awips.grib2 
+  (Daily RTG 1/12 degree SST analysis)
+3. rtgsst_grb_0.083_nomads.grib2 
+  (The same as rtgssthr_grb_0.083.grib2 but with complex packing)
+4. grib2.awips_rtgssthr_grb_0.083 
+  (Same as rtgsst_grb_0.083_awips.grib2  but with added TOC Flag and Flag Field separator block and WMO Header  at the beginning of the file for TOC's FTP Input Service)
+5. rtgssthr_grb_0.5.grib2 
+  (Daily RTG 1/2 degree SST analysis)
+
+C. GRIB Index files:
+
+1. rtgsstgrb0.083.index 
+  (Index file of rtgsstgrb0.083)
+2. rtgsstgrb0.083_awips.index
+  (Index file of rtgsstgrb0.083_awips)
+3. rtgsstgrb0.5.index
+  (Index file of rtgsstgrb0.5)
+4. rtgsstgrb0.5_awips.index
+  (Index file of rtgsstgrb0.5_awips)
+5. rtgssthr_grb_0.083.grib2.idx 
+  (Index file of rtgssthr_grb_0.083.grib2)
+6. rtgsst_grb_0.083_awips.grib2.idx 
+  (Index file of rtgsst_grb_0.083_awips.grib2)
+7. rtgsst_grb_0.083_nomads.grib2.idx
+  (Index file of rtgsst_grb_0.083_awips.grib2)
+8. rtgssthr_grb_0.5.grib2.idx
+  (Index file of rtgsst_grb_0.5.grib2)
+
+
+OISST-like SST files
+A. GRIB 1 data files
+
+   1. sstoiqd.sst.grb
+  (Daily quarter degree OI SST analysis, with mask as the 2nd variable)
+   2. oisst.yyyymmdd.grb
+  (Daily one degree OI SST analysis, no mask included)
+B. GRIB 2 data files
+   1. sstoiqd.sst.grib
+  (Daily quarter degree OI SST analysis, with mask as the 2nd variable)
+
+C. GRIB index files
+
+1. sstoiqd.sst.grb.index
+   (Index file of sstoiqd.sst.grb)
+2. sstoiqd.sst.grib2.idx
+   (Index file of sstoiqd.sst.grib)	
+
+GEMPAK files
+
+rtgsst_atl_yyyymmdd00
+  (Atlantic area SST file generated from GRIB1 sst data file rtgsstgrb0.083_awips)
+rtgsst_pac_yyyymmdd00
+  (Pacific area SST file generated from GRIB1 sst data file rtgsstgrb0.083_awips)
+
